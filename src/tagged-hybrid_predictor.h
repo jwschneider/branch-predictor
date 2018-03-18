@@ -19,35 +19,42 @@ public:
                           // unsigned int, we use 30 bit tags
 	my_update u;
 	branch_info bi;
-  unsigned char hist;
+    unsigned char hist;
 
-  std::list<unsigned int *> pred (HISTORY_LEN + 1); 
+	std::list<unsigned int *> pred (HISTORY_LEN + 1); 
 
 	my_predictor (void) : hist(0) { 
-	  for (std::list<unsigned int *>::iterator it = pred.begin(); it != pred.end(); it++) {
-      *it = new unsigned int[1<<TABLE_BITS];
-      memset (*it, 0, 1<<TABLE_BITS);
-      } 
+		/* iterate through all history and set to 0 for all entries */
+		for (std::list<unsigned int *>::iterator it = pred.begin(); it != pred.end(); it++) {
+    	*it = new unsigned int[1<<TABLE_BITS];
+    	memset (*it, 0, 1<<TABLE_BITS);
+     	} 
 	}
 
-	branch_update *predict (branch_info & b) {
+	branch_update *predict (branch_info &b) {
 		bi = b;
 		if (b.br_flags & BR_CONDITIONAL) {
-	      unsigned int ct = 0;
-	      for (std::list<unsigned int *>::iterator it = pred.begin(); it != pred.end(); it++) {
-	          if ((*(*it + (b.address ^ (hist & ct))) & (1<<TAG_LEN - 1)) ==
-	              (b.address & (1 <<TAG_LEN - 1))) {
-	            u.table = ct;
-	            u.index = (b.address ^ (hist & ct));
-	            u.direction_prediction (*(*it + u.index) >> TAG_LEN);
-	            break;
-	          } else if (it == pred.end()) {
-	            u.table = 0;
-	            u.index = b.address;
-	            u.direction_prediction (*(*l.begin() + u.index >> TAG_LEN));
-	          }
-	          ct++;
-	      }
+			/* TODO: did you want this to be logical and or bitwise and? */
+	    	unsigned int ct = 0;
+			for (std::list<unsigned int *>::iterator it = pred.begin(); it != pred.end(); it++) {
+				// for each item in the history list
+				if ((*(*it + (b.address ^ (hist & ct))) & (1<<TAG_LEN - 1)) ==
+					(b.address & (1 <<TAG_LEN - 1))) {
+					// if the item in the table matches the current item, update it
+					u.table = ct;
+					u.index = (b.address ^ (hist & ct));
+					u.direction_prediction (*(*it + u.index) >> TAG_LEN);
+					break;
+				} else if (it == pred.end()) {
+					// otherwise, if this is the last item
+					u.table = 0;
+					u.index = b.address;
+					u.direction_prediction (*(*l.begin() + u.index >> TAG_LEN));
+					// TODO: should this be an expression ^
+				}
+				// increment counter
+				ct++;
+			}
 		} else {
 			u.direction_prediction (true);                  
 		}
@@ -57,7 +64,7 @@ public:
 
 	void update (branch_update *u, bool taken, unsigned int target) {
 		if (bi.br_flags & BR_CONDITIONAL) {               
-      // TODO: implement the update functionality
+    // TODO: implement the update functionality
 			if (taken) {                      
 				if (*c < 3) (*c)++;             
 			} else {
