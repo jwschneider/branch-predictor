@@ -50,7 +50,7 @@ public:
 					u.table = 0;
 					u.index = b.address;
 					u.direction_prediction (*(*l.begin() + u.index >> TAG_LEN));
-					// TODO: should this be an expression ^
+					// TODO: should this be an expression ^ ?
 				}
 				// increment counter
 				ct++;
