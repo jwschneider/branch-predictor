@@ -6,7 +6,7 @@
 
 class my_update : public branch_update {
 public:
-	unsigned int index;     // index in the table that was updated
+  unsigned int index;     // index in the table that was updated
   unsigned int table;     // which table was updated, 0 being the base
 };
 
@@ -24,30 +24,30 @@ public:
   std::list<unsigned int *> pred (HISTORY_LEN + 1); 
 
 	my_predictor (void) : hist(0) { 
-		for (std::list<unsigned int *>::iterator it = pred.begin(); it != pred.end(); it++) {
+	  for (std::list<unsigned int *>::iterator it = pred.begin(); it != pred.end(); it++) {
       *it = new unsigned int[1<<TABLE_BITS];
       memset (*it, 0, 1<<TABLE_BITS);
-    } 
+      } 
 	}
 
 	branch_update *predict (branch_info & b) {
 		bi = b;
 		if (b.br_flags & BR_CONDITIONAL) {
-      unsigned int ct = 0;
-      for (std::list<unsigned int *>::iterator it = pred.begin(); it != pred.end(); it++ {
-          if ((*(*it + (b.address ^ (hist & ct))) & (1<<TAG_LEN - 1)) ==
-              (b.address & (1 <<TAG_LEN - 1))) {
-            u.table = ct;
-            u.index = (b.address ^ (hist & ct));
-            u.direction_prediction (*(*it + u.index) >> TAG_LEN));
-            break;
-          } else if (it == pred.end()) {
-            u.table = 0;
-            u.index = b.address;
-            u.direction_prediction (*(*l.begin() + u.index >> TAG_LEN));
-          }
-          ct++;
-      }
+	      unsigned int ct = 0;
+	      for (std::list<unsigned int *>::iterator it = pred.begin(); it != pred.end(); it++) {
+	          if ((*(*it + (b.address ^ (hist & ct))) & (1<<TAG_LEN - 1)) ==
+	              (b.address & (1 <<TAG_LEN - 1))) {
+	            u.table = ct;
+	            u.index = (b.address ^ (hist & ct));
+	            u.direction_prediction (*(*it + u.index) >> TAG_LEN);
+	            break;
+	          } else if (it == pred.end()) {
+	            u.table = 0;
+	            u.index = b.address;
+	            u.direction_prediction (*(*l.begin() + u.index >> TAG_LEN));
+	          }
+	          ct++;
+	      }
 		} else {
 			u.direction_prediction (true);                  
 		}
