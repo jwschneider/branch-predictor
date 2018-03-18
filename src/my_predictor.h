@@ -39,7 +39,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 		    unsigned int tableCounter = 0;
 	    	u.table = 0;
 	    	u.index = b.address & ((1 << TAG_LEN) - 1);
-			for (vector<unsigned int *>::iterator it = pred.begin(); it != pred.end(); it++) {
+			for (vector<unsigned int *>::iterator it = pred.begin() + 1; it != pred.end(); it++) {
 				// for each item in the history list
 	        	if (*(*it + ((b.address ^ (hist & ct)) & ((1<<TABLE_BITS) - 1))) & ((1<<TAG_LEN) - 1)) ==
 	            		(b.address & ((1<<TAG_LEN) - 1)) {
