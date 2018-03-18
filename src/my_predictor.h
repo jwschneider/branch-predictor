@@ -13,12 +13,12 @@ public:
 #define TABLE_BITS	10      // table has 2^10 rows
 	my_update u;
 	branch_info bi;
-	unsigned char tab[1<<TABLE_BITS];     // each table entry is a char
+	unsigned char tab[1<<TABLE_BITS];   // each table entry is a char
                                         // 0 is strongly not taken, 3 is
                                         //   strongly taken
 
 	my_predictor (void) { 
-		memset (tab, 0, sizeof (tab));      // initialize the table to all strongly
+		memset (tab, 0, sizeof (tab));  // initialize the table to all strongly
                                         // not taken
 	}
 
