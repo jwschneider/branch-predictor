@@ -104,7 +104,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 					}
 				}
 				*(pred[t_index] + ((bi.address ^ (hist & t_index)) & ((1<<TABLE_BITS) - 1))) =
-					 (((unsigned int) taken << 1) | ~taken) | ((bi.address) & ((1<<TAG_LEN) - 1));
+					 (((unsigned int) taken << 1) | (1 - taken)) | ((bi.address) & ((1<<TAG_LEN) - 1));
 				// store the updated prediction in table
 			}
 		  	hist = ((hist << 1) | taken) & ((1<< HISTORY_LEN) - 1); 
