@@ -5,6 +5,8 @@
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
+#include <stdio.h>
+
 using std::vector;
 using std::cout;
 using std::endl;
@@ -39,19 +41,17 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 	branch_update *predict (branch_info &b) {
 		bi = b;
 		if (b.br_flags & BR_CONDITIONAL) {
-		    unsigned int tableCounter = 0;
 	    	u.table = 0;
 	    	u.index = b.address & ((1 << TABLE_BITS) - 1);
-			for (vector<unsigned int *>::iterator it = pred.begin() + 1; it != pred.end(); it++) {
+			for (unsigned int tableCounter = 1; tableCounter < HISTORY_LEN + 1; tableCounter++) {
 				// for each item in the history list
-	        	if ((*(*it + ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1))) & ((1<<TAG_LEN) - 1)) ==
+	        	if ((*(pred[tableCounter] + ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1))) & ((1<<TAG_LEN) - 1)) ==
 	            		(b.address & ((1<<TAG_LEN) - 1))) {
 					// if the item in the table matches the current item, update it
 	  				u.table = tableCounter;
 					u.index = ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1));
 				}
 				// increment counter
-				tableCounter++;
 			}
 	      	unsigned int *tbl = pred[u.table];
 			u.direction_prediction (*(tbl + u.index) >> (TAG_LEN + 1));
@@ -68,6 +68,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 			my_update* y = (my_update*) u;
 			unsigned int* tbl = pred[y->table];
 			unsigned int prediction = *(tbl + y->index) >> (TAG_LEN);
+			printf ("%d\t%d\t%d\t%d\n", y->table, y->index, prediction, taken);
 			if (taken == (prediction >> 1)) {
 			// if prediction was correct
 				if (taken) {
@@ -89,9 +90,11 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 				srand(1);
 				int rNum = rand()%2;
 				unsigned int* table;
+				unsigned int t_index;
 				if (rNum) {
 					// rNum is odd, update table i + 1
 					table = pred[((y->table + 1) & ((1<<HISTORY_LEN) - 1))];
+					t_index = y->table + 1;
 					// get the table to update from pred
 				} else {
 					// if rNum is even, update either i+2, i+3
@@ -99,12 +102,14 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 					if (rNum) {
 						// if rNUm is odd, update table i+2
 						table = pred[((y->table + 2) & ((1<<HISTORY_LEN) - 1))];
+						t_index = y->table + 2;
 					} else {
 						table = pred[((y->table + 3) & ((1<<HISTORY_LEN) - 1))];
+						t_index = y->table + 3;
 					}
 				}
-				*(table + ((bi.address ^ (hist & y->table)) & ((1<<TABLE_BITS) - 1))) =
-					 ((taken << 1) << TAG_LEN) | ((bi.address) & ((1<<TAG_LEN) - 1));
+				*(table + ((bi.address ^ (hist & t_index)) & ((1<<TABLE_BITS) - 1))) =
+					 (((unsigned int) taken << 1) | ~taken) | ((bi.address) & ((1<<TAG_LEN) - 1));
 				// store the updated prediction in table
 			}
 		  	hist = ((hist << 1) | taken) & ((1<< HISTORY_LEN) - 1); 
