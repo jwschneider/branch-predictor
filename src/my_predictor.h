@@ -72,9 +72,9 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 			my_update* y = (my_update*) u;
 			unsigned int* tbl = pred[y->table];
 			unsigned int prediction = *(tbl + y->index) >> (TAG_LEN);
-      if (y->index == 963) 
-        printf("Address: %d\tIndex: %d\tTable: %d\tPrediction: %d\t Taken: %d\n",
-           bi.address, y->index, y->table, prediction, taken);
+      //if (y->index == 963) 
+      //  printf("Address: %d\tIndex: %d\tTable: %d\tPrediction: %d\t Taken: %d\n",
+      //     bi.address, y->index, y->table, prediction, taken);
 			//printf ("%d\t%d\t%d\t%d\n", y->table, y->index, prediction, taken);
 			if (taken == (prediction >> 1)) {
 			// if prediction was correct
