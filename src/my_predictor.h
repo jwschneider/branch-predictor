@@ -49,11 +49,11 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 	    	u.index = b.address & ((1 << TABLE_BITS) - 1);
 			for (unsigned int tableCounter = 1; tableCounter < HISTORY_LEN + 1; tableCounter++) {
 				// for each item in the history list
-	        	if ((*(pred[tableCounter] + ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1))) & ((1<<TAG_LEN) - 1)) ==
+	        	if ((*(pred[tableCounter] + ((b.address ^ (hist & (1<<tableCounter) - 1)) & ((1<<TABLE_BITS) - 1))) & ((1<<TAG_LEN) - 1)) ==
 	            		(b.address & ((1<<TAG_LEN) - 1))) {
 					// if the item in the table matches the current item, update it
 	  				u.table = tableCounter;
-					u.index = ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1));
+					u.index = ((b.address ^ (hist & (1<<tableCounter) - 1)) & ((1<<TABLE_BITS) - 1));
 				}
 				// increment counter
 			}
@@ -72,6 +72,9 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 			my_update* y = (my_update*) u;
 			unsigned int* tbl = pred[y->table];
 			unsigned int prediction = *(tbl + y->index) >> (TAG_LEN);
+      if (y->index == 963) 
+        printf("Address: %d\tIndex: %d\tTable: %d\tPrediction: %d\t Taken: %d\n",
+           bi.address, y->index, y->table, prediction, taken);
 			//printf ("%d\t%d\t%d\t%d\n", y->table, y->index, prediction, taken);
 			if (taken == (prediction >> 1)) {
 			// if prediction was correct
@@ -95,6 +98,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
           		}
 			} else {
 			// if prediction was incorrect, allocate space 
+        //printf ("Mispredict!\t Table:%d\t Index:%d\t Prediction:%d\t Taken:%d\t History:%d\n", y->table, y->index, prediction, taken, hist);
 				srand(1);
 				int rNum = rand()%2;
 				unsigned int t_index;
