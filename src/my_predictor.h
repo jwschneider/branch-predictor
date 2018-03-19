@@ -78,7 +78,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 				*(tbl + ((my_update *)u)->index) = (*(tbl + ((my_update *)u)->index) &
           			((1<<TAG_LEN) - 1)) |
           			(prediction << TAG_LEN);
-          		if ((((my_update *)u)->table) - 1 >= 0) {
+          		if ((((my_update *)u)->table) > 0) {
           			// if update table has previous, update there too
 					tbl = pred[(((my_update *)u)->table) - 1];
           			*(tbl + ((my_update *)u)->index) = (*(tbl + ((my_update *)u)->index) &
