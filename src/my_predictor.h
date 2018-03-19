@@ -9,7 +9,6 @@ using std::vector;
 class my_update : public branch_update {
 public:
   unsigned int index;     // index in the table that was updated
-  unsigned int tag;
   unsigned int table;     // which table was updated, 0 being the base
 };
 
@@ -40,7 +39,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 		if (b.br_flags & BR_CONDITIONAL) {
 		    unsigned int tableCounter = 0;
 	    	u.table = 0;
-	    	u.index = b.address & ((1 << TAG_LEN) - 1);
+	    	u.index = b.address & ((1 << TABLE_BITS) - 1);
 			for (vector<unsigned int *>::iterator it = pred.begin() + 1; it != pred.end(); it++) {
 				// for each item in the history list
 	        	if ((*(*it + ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1))) & ((1<<TAG_LEN) - 1)) ==
@@ -48,11 +47,10 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 					// if the item in the table matches the current item, update it
 	  				u.table = tableCounter;
 					u.index = ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1));
-					u.tag = b.address & ((1 << TAG_LEN) - 1);
 				}
-					// increment counter
-					tableCounter++;
-				}
+				// increment counter
+				tableCounter++;
+			}
 	      	unsigned int *tbl = pred[u.table];
 			u.direction_prediction (*(tbl + u.index) >> (TAG_LEN + 1));
 		} else {
@@ -78,12 +76,11 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 				*(tbl + ((my_update *)u)->index) = (*(tbl + ((my_update *)u)->index) &
           			((1<<TAG_LEN) - 1)) |
           			(prediction << TAG_LEN);
-          		if (((my_update *)u)->table - 1 > 0) {
+          		if ((((my_update *)u)->table) - 1 >= 0) {
           			// if update table has previous, update there too
 					tbl = pred[(((my_update *)u)->table) - 1];
           			*(tbl + ((my_update *)u)->index) = (*(tbl + ((my_update *)u)->index) &
-          			((1<<TAG_LEN) - 1)) |
-          			(prediction << TAG_LEN);
+          			((1<<TAG_LEN) - 1)) | (prediction << TAG_LEN);
           		}
 			} else {
 			// if prediction was incorrect, allocate space 
@@ -104,7 +101,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 						table = pred[((((my_update *)u)->table + 3) & ((1<<HISTORY_LEN) - 1))];
 					}
 				}
-				*(table + ((my_update *)u)->index) = ((taken << 1) << TAG_LEN) | (((my_update *)u)->tag);
+				*(table + ((my_update *)u)->index) = ((taken << 1) << TAG_LEN) | ((bi.address) & ((1<<TAG_LEN) - 1));
 				// store the updated prediction in table
 			}
       
