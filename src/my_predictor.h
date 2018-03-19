@@ -31,9 +31,8 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 	my_predictor (void) : hist(0) { 
 		/* iterate through all history and set to 0 for all entries */
 		for (unsigned int i = 0; i < HISTORY_LEN + 1; i++) {
-	    	unsigned int tbl[1<<TABLE_BITS];
-	    	memset (tbl, 0, sizeof (tbl));
-	    	pred.push_back(tbl);
+		unsigned int* tbl = (unsigned int*) calloc(1 << TABLE_BITS, sizeof(unsigned int));
+		pred.push_back(tbl);
      	} 
 	}
 
@@ -50,7 +49,6 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 					// if the item in the table matches the current item, update it
 	  				u.table = tableCounter;
 					u.index = ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1));
-				cout << u.index << endl;
 				}
 				// increment counter
 				tableCounter++;
