@@ -102,20 +102,24 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 				srand(1);
 				int rNum = rand()%2;
 				unsigned int t_index = y->table;
-				if (rNum && (y->table < HISTORY_LEN - 1)) {
+				if (rNum) {
 					// rNum is odd, update table i + 1
-					t_index = (y->table + 1) % (HISTORY_LEN + 1);
+					t_index = (y->table + 1);
 					// get the table to update from pred
 				} else {
 					// if rNum is even, update either i+2, i+3
 					rNum = rand()%2;
-					if (rNum && (y->table < HISTORY_LEN - 2)) {
+					if (rNum) {
 						// if rNUm is odd, update table i+2
-						t_index = (y->table +2) % (HISTORY_LEN + 1);
-					} else if (y->table < HISTORY_LEN - 3) {
+						t_index = (y->table + 2);
+					} else {
 						// if rNum is even and we have 
-						t_index = (y->table + 3) % (HISTORY_LEN + 1);
+						t_index = (y->table + 3);
 					}
+				}
+				if (t_index > HISTORY_LEN) {
+					// if our adjustment has caused us to go out-of-bounds, update at rightmost table
+					t_index = HISTORY_LEN;
 				}
 				*(pred[t_index] + ((bi.address ^ (hist & (1<<t_index)-1)) & ((1<<TABLE_BITS) - 1))) =
 					 ((((unsigned int) taken << 1) | (1 - taken)) << TAG_LEN) | ((bi.address) & ((1<<TAG_LEN) - 1));
