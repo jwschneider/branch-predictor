@@ -43,11 +43,11 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 	    	u.index = b.address & ((1 << TAG_LEN) - 1);
 			for (vector<unsigned int *>::iterator it = pred.begin() + 1; it != pred.end(); it++) {
 				// for each item in the history list
-	        	if (*(*it + ((b.address ^ (hist & ct)) & ((1<<TABLE_BITS) - 1))) & ((1<<TAG_LEN) - 1)) ==
-	            		(b.address & ((1<<TAG_LEN) - 1)) {
+	        	if ((*(*it + ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1))) & ((1<<TAG_LEN) - 1)) ==
+	            		(b.address & ((1<<TAG_LEN) - 1))) {
 					// if the item in the table matches the current item, update it
 	  				u.table = tableCounter;
-					u.index = ((b.address ^ (hist & ct)) & ((1<<TABLE_BITS) - 1));
+					u.index = ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1));
 					u.tag = b.address & ((1 << TAG_LEN) - 1);
 				}
 					// increment counter
@@ -78,7 +78,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 				*(tbl + ((my_update *)u)->index) = (*(tbl + ((my_update *)u)->index) &
           			((1<<TAG_LEN) - 1)) |
           			(prediction << TAG_LEN);
-          		if ((my_update *)u->table - 1 > 0) {
+          		if (((my_update *)u)->table - 1 > 0) {
           			// if update table has previous, update there too
 					tbl = pred[(((my_update *)u)->table) - 1];
           			*(tbl + ((my_update *)u)->index) = (*(tbl + ((my_update *)u)->index) &
@@ -89,15 +89,23 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 			// if prediction was incorrect, allocate space 
 				srand(1);
 				int rNum = rand()%2;
+				unsigned int* table;
 				if (rNum) {
 					// rNum is odd, update table i + 1
-					unsigned int *table = pred[((u->table + 1) & ((1<<HISTORY_LEN) - 1))];
+					table = pred[((((my_update *)u)->table + 1) & ((1<<HISTORY_LEN) - 1))];
 					// get the table to update from pred
-					*(table + u->index) = ((taken << 1) << TAG_LEN) | (u->tag);
-					// store the updated prediction in table
 				} else {
 					// if rNum is even, update either i+2, i+3
+					rNum = rand()%2;
+					if (rNum) {
+						// if rNUm is odd, update table i+2
+						table = pred[((((my_update *)u)->table + 2) & ((1<<HISTORY_LEN) - 1))];
+					} else {
+						table = pred[((((my_update *)u)->table + 3) & ((1<<HISTORY_LEN) - 1))];
+					}
 				}
+				*(table + ((my_update *)u)->index) = ((taken << 1) << TAG_LEN) | (((my_update *)u)->tag);
+				// store the updated prediction in table
 			}
       
 		}
