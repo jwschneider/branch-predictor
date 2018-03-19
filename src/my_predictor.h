@@ -101,18 +101,19 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
         //printf ("Mispredict!\t Table:%d\t Index:%d\t Prediction:%d\t Taken:%d\t History:%d\n", y->table, y->index, prediction, taken, hist);
 				srand(1);
 				int rNum = rand()%2;
-				unsigned int t_index;
-				if (rNum) {
+				unsigned int t_index = y->table;
+				if (rNum && (y->table < HISTORY_LEN - 1)) {
 					// rNum is odd, update table i + 1
 					t_index = (y->table + 1) % (HISTORY_LEN + 1);
 					// get the table to update from pred
 				} else {
 					// if rNum is even, update either i+2, i+3
 					rNum = rand()%2;
-					if (rNum) {
+					if (rNum && (y->table < HISTORY_LEN - 2)) {
 						// if rNUm is odd, update table i+2
-						t_index = (y->table + 2) % (HISTORY_LEN + 1);
-					} else {
+						t_index = (y->table +2) % (HISTORY_LEN + 1);
+					} else if (y->table < HISTORY_LEN - 3) {
+						// if rNum is even and we have 
 						t_index = (y->table + 3) % (HISTORY_LEN + 1);
 					}
 				}
