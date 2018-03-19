@@ -53,8 +53,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 				}
 				// increment counter
 			}
-	      	unsigned int *tbl = pred[u.table];
-			u.direction_prediction (*(tbl + u.index) >> (TAG_LEN + 1));
+	      	unsigned int *tbl = pred[u.table]; u.direction_prediction (*(tbl + u.index) >> (TAG_LEN + 1));
 		} else {
 			u.direction_prediction (true);                  
 		}
@@ -89,26 +88,22 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 			// if prediction was incorrect, allocate space 
 				srand(1);
 				int rNum = rand()%2;
-				unsigned int* table;
 				unsigned int t_index;
 				if (rNum) {
 					// rNum is odd, update table i + 1
-					table = pred[((y->table + 1) & ((1<<HISTORY_LEN) - 1))];
-					t_index = y->table + 1;
+					t_index = (y->table + 1) % (HISTORY_LEN + 1);
 					// get the table to update from pred
 				} else {
 					// if rNum is even, update either i+2, i+3
 					rNum = rand()%2;
 					if (rNum) {
 						// if rNUm is odd, update table i+2
-						table = pred[((y->table + 2) & ((1<<HISTORY_LEN) - 1))];
-						t_index = y->table + 2;
+						t_index = (y->table + 2) % (HISTORY_LEN + 1);
 					} else {
-						table = pred[((y->table + 3) & ((1<<HISTORY_LEN) - 1))];
-						t_index = y->table + 3;
+						t_index = (y->table + 3) % (HISTORY_LEN + 1);
 					}
 				}
-				*(table + ((bi.address ^ (hist & t_index)) & ((1<<TABLE_BITS) - 1))) =
+				*(pred[t_index] + ((bi.address ^ (hist & t_index)) & ((1<<TABLE_BITS) - 1))) =
 					 (((unsigned int) taken << 1) | ~taken) | ((bi.address) & ((1<<TAG_LEN) - 1));
 				// store the updated prediction in table
 			}
