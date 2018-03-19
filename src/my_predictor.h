@@ -20,7 +20,7 @@ public:
 class my_predictor : public branch_predictor {
 public:
 const unsigned int TABLE_BITS	= 10;   // start with 2^10 rows
-const unsigned int HISTORY_LEN = 4;    // start with 4 bit history length, as in the
+const unsigned int HISTORY_LEN = 5;    // start with 4 bit history length, as in the
                                         // book example  
 const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fit into an
                                         // unsigned int, we use 30 bit tags
@@ -105,7 +105,6 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 				if (rNum) {
 					// rNum is odd, update table i + 1
 					t_index = (y->table + 1);
-					// get the table to update from pred
 				} else {
 					// if rNum is even, update either i+2, i+3
 					rNum = rand()%2;
@@ -113,13 +112,19 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 						// if rNUm is odd, update table i+2
 						t_index = (y->table + 2);
 					} else {
-						// if rNum is even and we have 
+						// if rNum is even, update table i+3
 						t_index = (y->table + 3);
 					}
 				}
 				if (t_index > HISTORY_LEN) {
-					// if our adjustment has caused us to go out-of-bounds, update at rightmost table
-					t_index = HISTORY_LEN;
+					// if our adjustment has caused us to go out-of-bounds
+					if (y->table + 1 <= HISTORY_LEN) {
+						// if we have a one-right table to update, update that
+						t_index = y->table+1;
+					} else {
+						// otherwise, just update the last table
+						t_index = HISTORY_LEN;
+					}
 				}
 				*(pred[t_index] + ((bi.address ^ (hist & (1<<t_index)-1)) & ((1<<TABLE_BITS) - 1))) =
 					 ((((unsigned int) taken << 1) | (1 - taken)) << TAG_LEN) | ((bi.address) & ((1<<TAG_LEN) - 1));
