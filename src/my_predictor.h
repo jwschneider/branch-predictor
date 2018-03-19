@@ -33,7 +33,11 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 	my_predictor (void) : hist(0) { 
 		/* iterate through all history and set to 0 for all entries */
 		for (unsigned int i = 0; i < HISTORY_LEN + 1; i++) {
-		unsigned int* tbl = (unsigned int*) calloc(1 << TABLE_BITS, sizeof(unsigned int));
+		unsigned int* tbl = (unsigned int*) malloc((1 << TABLE_BITS) * sizeof(unsigned int));
+    // what to initialize predictions to
+    for (int i = 0; i < (1<<TABLE_BITS); i++) {
+      *(tbl + i) = 1 << (TAG_LEN + 1);
+    }
 		pred.push_back(tbl);
      	} 
 	}
