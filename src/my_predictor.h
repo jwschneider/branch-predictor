@@ -59,15 +59,15 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 			u.direction_prediction (true);                  
 		}
 		u.target_prediction (0);                          
-		cout << u.table << endl << u.index << endl;
+		//cout << u.table << endl << u.index << endl;
 		return &u;
 	}
 
 	void update (branch_update *u, bool taken, unsigned int target) {
 		if (bi.br_flags & BR_CONDITIONAL) {               
-			my_update* u = (my_update*) u;
-			unsigned int* tbl = pred[u->table];
-			unsigned int prediction = *(tbl + u->index) >> (TAG_LEN);
+			my_update* y = (my_update*) u;
+			unsigned int* tbl = pred[y->table];
+			unsigned int prediction = *(tbl + y->index) >> (TAG_LEN);
 			if (taken == (prediction >> 1)) {
 			// if prediction was correct
 				if (taken) {
@@ -75,13 +75,13 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 				} else {
 					if (prediction > 0) prediction--;
 				}
-				*(tbl + u->index) = (*(tbl + u->index) &
+				*(tbl + y->index) = (*(tbl + y->index) &
           			((1<<TAG_LEN) - 1)) |
           			(prediction << TAG_LEN);
-          		if ((u->table) > 0) {
+          		if ((y->table) > 0) {
           			// if update table has previous, update there too
-					tbl = pred[(u->table) - 1];
-          			*(tbl + u->index) = (*(tbl + u->index) &
+					tbl = pred[(y->table) - 1];
+          			*(tbl + y->index) = (*(tbl + y->index) &
           			((1<<TAG_LEN) - 1)) | (prediction << TAG_LEN);
           		}
 			} else {
@@ -91,19 +91,19 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 				unsigned int* table;
 				if (rNum) {
 					// rNum is odd, update table i + 1
-					table = pred[((u->table + 1) & ((1<<HISTORY_LEN) - 1))];
+					table = pred[((y->table + 1) & ((1<<HISTORY_LEN) - 1))];
 					// get the table to update from pred
 				} else {
 					// if rNum is even, update either i+2, i+3
 					rNum = rand()%2;
 					if (rNum) {
 						// if rNUm is odd, update table i+2
-						table = pred[((u->table + 2) & ((1<<HISTORY_LEN) - 1))];
+						table = pred[((y->table + 2) & ((1<<HISTORY_LEN) - 1))];
 					} else {
-						table = pred[((u->table + 3) & ((1<<HISTORY_LEN) - 1))];
+						table = pred[((y->table + 3) & ((1<<HISTORY_LEN) - 1))];
 					}
 				}
-				*(table + ((bi.address ^ (hist & u->table)) & ((1<<TABLE_BITS) - 1))) =
+				*(table + ((bi.address ^ (hist & y->table)) & ((1<<TABLE_BITS) - 1))) =
 					 ((taken << 1) << TAG_LEN) | ((bi.address) & ((1<<TAG_LEN) - 1));
 				// store the updated prediction in table
 			}
