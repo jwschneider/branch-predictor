@@ -53,7 +53,8 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 				}
 				// increment counter
 			}
-	      	unsigned int *tbl = pred[u.table]; u.direction_prediction (*(tbl + u.index) >> (TAG_LEN + 1));
+	      	unsigned int *tbl = pred[u.table]; 
+	      	u.direction_prediction (*(tbl + u.index) >> (TAG_LEN + 1));
 		} else {
 			u.direction_prediction (true);                  
 		}
@@ -67,7 +68,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 			my_update* y = (my_update*) u;
 			unsigned int* tbl = pred[y->table];
 			unsigned int prediction = *(tbl + y->index) >> (TAG_LEN);
-			printf ("%d\t%d\t%d\t%d\n", y->table, y->index, prediction, taken);
+			//printf ("%d\t%d\t%d\t%d\n", y->table, y->index, prediction, taken);
 			if (taken == (prediction >> 1)) {
 			// if prediction was correct
 				if (taken) {
@@ -76,13 +77,17 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 					if (prediction > 0) prediction--;
 				}
 				*(tbl + y->index) = (*(tbl + y->index) &
-          			((1<<TAG_LEN) - 1)) |
-          			(prediction << TAG_LEN);
+          			((1<<TAG_LEN) - 1)) | (prediction << TAG_LEN);
+          		
           		if ((y->table) > 0) {
           			// if update table has previous, update there too
-					tbl = pred[(y->table) - 1];
-          			*(tbl + y->index) = (*(tbl + y->index) &
-          			((1<<TAG_LEN) - 1)) | (prediction << TAG_LEN);
+					unsigned int* new_tbl = pred[(y->table) - 1];
+					if (y->table - 1 == 0) {
+						*(new_tbl + y->index) = (prediction << TAG_LEN);
+					} else {
+          				*(new_tbl + y->index) = (*(tbl + y->index) &
+          					((1<<TAG_LEN) - 1)) | (prediction << TAG_LEN);
+          			}
           		}
 			} else {
 			// if prediction was incorrect, allocate space 
