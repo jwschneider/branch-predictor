@@ -4,7 +4,10 @@
 // Current hash implementation is a simple xor hash; TBU.
 #include <vector>
 #include <stdlib.h>
+#include <iostream>
 using std::vector;
+using std::cout;
+using std::endl;
 
 class my_update : public branch_update {
 public:
@@ -47,6 +50,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 					// if the item in the table matches the current item, update it
 	  				u.table = tableCounter;
 					u.index = ((b.address ^ (hist & tableCounter)) & ((1<<TABLE_BITS) - 1));
+				cout << u.index << endl;
 				}
 				// increment counter
 				tableCounter++;
