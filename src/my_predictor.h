@@ -19,10 +19,10 @@ public:
 
 class my_predictor : public branch_predictor {
 public:
-const unsigned int TABLE_BITS	= 10;   // start with 2^10 rows
-const unsigned int HISTORY_LEN = 4;    // start with 4 bit history length, as in the
+const unsigned int TABLE_BITS	= 8;   // start with 2^10 rows
+const unsigned int HISTORY_LEN = 31;    // start with 4 bit history length, as in the
                                         // book example  
-const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fit into an
+const unsigned int TAG_LEN = 6;         // so that the prediction ang tag can fit into an
                                         // unsigned int, we use 30 bit tags
 	my_update u;
 	branch_info bi;
@@ -41,6 +41,9 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 		pred.push_back(tbl);
      	} 
 	}
+  unsigned int address_hash(unsigned int address, unsigned int history) {
+    return address ^ history;
+  }
 
 	branch_update *predict (branch_info &b) {
 		bi = b;
@@ -49,11 +52,11 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 	    	u.index = b.address & ((1 << TABLE_BITS) - 1);
 			for (unsigned int tableCounter = 1; tableCounter < HISTORY_LEN + 1; tableCounter++) {
 				// for each item in the history list
-	        	if ((*(pred[tableCounter] + ((b.address ^ (hist & (1<<tableCounter) - 1)) & ((1<<TABLE_BITS) - 1))) & ((1<<TAG_LEN) - 1)) ==
+	        	if ((*(pred[tableCounter] + (address_hash(b.address, (hist & (1<<tableCounter) - 1)) & ((1<<TABLE_BITS) - 1))) & ((1<<TAG_LEN) - 1)) ==
 	            		(b.address & ((1<<TAG_LEN) - 1))) {
 					// if the item in the table matches the current item, update it
 	  				u.table = tableCounter;
-					u.index = ((b.address ^ (hist & (1<<tableCounter) - 1)) & ((1<<TABLE_BITS) - 1));
+					u.index = (address_hash(b.address, (hist & (1<<tableCounter) - 1)) & ((1<<TABLE_BITS) - 1));
 				}
 				// increment counter
 			}
@@ -121,7 +124,7 @@ const unsigned int TAG_LEN = 4;         // so that the prediction ang tag can fi
 					// if our adjustment has caused us to go out-of-bounds, update at rightmost table
 					t_index = HISTORY_LEN;
 				}
-				*(pred[t_index] + ((bi.address ^ (hist & (1<<t_index)-1)) & ((1<<TABLE_BITS) - 1))) =
+				*(pred[t_index] + (address_hash(bi.address, (hist & (1<<t_index)-1)) & ((1<<TABLE_BITS) - 1))) =
 					 ((((unsigned int) taken << 1) | (1 - taken)) << TAG_LEN) | ((bi.address) & ((1<<TAG_LEN) - 1));
 				// store the updated prediction in table
 			}
