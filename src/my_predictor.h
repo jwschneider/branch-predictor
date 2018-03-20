@@ -20,11 +20,11 @@ public:
 
 class my_predictor : public branch_predictor {
 public:
-const unsigned int LIMIT_FACTOR = 15000; // when to wipe table
+const unsigned int LIMIT_FACTOR = 2200; // when to wipe table
 const unsigned int TABLE_BITS	= 12;   // start with 2^10 rows
-const unsigned int HISTORY_LEN = 31;    // start with 4 bit history length, as in the
+const unsigned int HISTORY_LEN = 15;    // start with 4 bit history length, as in the
                                         // book example  
-const unsigned int TAG_LEN = 5;         // so that the prediction ang tag can fit into an
+const unsigned int TAG_LEN = 8;         // so that the prediction ang tag can fit into an
                                         // unsigned int, we use 30 bit tags
 const unsigned int TABLE_CT = 5;
 
@@ -156,15 +156,15 @@ const unsigned int TABLE_CT = 5;
 		  hist = ((hist << 1) | taken) & ((1<< HISTORY_LEN) - 1); 
       
 		}
-		if (num_inst_seen > LIMIT_FACTOR) {
-			/* iterate through all history and set to 0 for all entries */
-			for (unsigned int j = 0; j < TABLE_CT; j++) {
-			    // what to initialize predictions to
-			    for (int i = 0; i < (1<<TABLE_BITS); i++) {
-			      *(pred[j] + i) = 1 << (TAG_LEN + 1);
-			    }
-		    } 
-		    num_inst_seen = 0;
-		}
+		// if (num_inst_seen > LIMIT_FACTOR) {
+		// 	/* iterate through all history and set to 0 for all entries */
+		// 	for (unsigned int j = 0; j < TABLE_CT; j++) {
+		// 	    // what to initialize predictions to
+		// 	    for (int i = 0; i < (1<<TABLE_BITS); i++) {
+		// 	      *(pred[j] + i) = 1 << (TAG_LEN + 1);
+		// 	    }
+		//     } 
+		//     num_inst_seen = 0;
+		// }
 	}
 };
