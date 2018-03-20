@@ -21,15 +21,15 @@ public:
 class my_predictor : public branch_predictor {
 public:
 const unsigned int TABLE_BITS	= 12;   // start with 2^10 rows
-const unsigned int HISTORY_LEN = 32;    // start with 4 bit history length, as in the
+const unsigned int HISTORY_LEN = 31;    // start with 4 bit history length, as in the
                                         // book example  
-const unsigned int TAG_LEN = 6;         // so that the prediction ang tag can fit into an
+const unsigned int TAG_LEN = 5;         // so that the prediction ang tag can fit into an
                                         // unsigned int, we use 30 bit tags
-const unsigned int TABLE_CT = 6;
+const unsigned int TABLE_CT = 5;
 
 	my_update u;
 	branch_info bi;
-  unsigned char hist;
+  unsigned int hist;
 
 	vector<unsigned int *> pred; 
 
@@ -119,7 +119,7 @@ const unsigned int TABLE_CT = 6;
           		}
 			} else {
 			// if prediction was incorrect, allocate space 
-        //printf ("Mispredict!\t Table:%d\t Index:%d\t Prediction:%d\t Taken:%d\t History:%d\n", y->table, y->index, prediction, taken, hist);
+      //  printf ("Mispredict!\t Table:%d\t Index:%d\t Prediction:%d\t Taken:%d\t History:%d\n", y->table, y->index, prediction, taken, hist);
 				srand(1);
 				int rNum = rand()%2;
 				unsigned int t_index = y->table;
@@ -149,9 +149,8 @@ const unsigned int TABLE_CT = 6;
 				}
 				*(pred[t_index] + (address_hash(bi.address, hist_mask(gp(2, t_index))) & ((1<<TABLE_BITS) - 1))) =
 					 ((((unsigned int) taken << 1) | (1 - taken)) << TAG_LEN) | ((bi.address) & ((1<<TAG_LEN) - 1));
-				// store the updated prediction in table
 			}
-		  	hist = ((hist << 1) | taken) & ((1<< HISTORY_LEN) - 1); 
+		  hist = ((hist << 1) | taken) & ((1<< HISTORY_LEN) - 1); 
       
 		}
 	}
