@@ -20,8 +20,7 @@ public:
 
 class my_predictor : public branch_predictor {
 public:
-const unsigned int LIMIT_FACTOR = 2200; // when to wipe table
-const unsigned int TABLE_BITS	= 12;   // start with 2^10 rows
+const unsigned int TABLE_BITS	= 15;   // start with 2^10 rows
 const unsigned int HISTORY_LEN = 15;    // start with 4 bit history length, as in the
                                         // book example  
 const unsigned int TAG_LEN = 8;         // so that the prediction ang tag can fit into an
