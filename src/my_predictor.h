@@ -8,10 +8,11 @@
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
+#include <iterator>
+using namespace std;
 using std::list;
 using std::vector;
 using std::cout;
-using std::next;
 using std::endl;
 
 class my_update : public branch_update {
@@ -104,7 +105,7 @@ const unsigned int TABLE_CT = 5;
 			u.direction_prediction (true);                  
 		}
 		u.target_prediction (0);                          
-		cout << u.table << endl << u.index << endl;
+		//cout << u.table << endl << u.index << endl;
 		return &u;
 	}
 
@@ -136,6 +137,16 @@ const unsigned int TABLE_CT = 5;
           		}
 			} else {
 			// if prediction was incorrect, allocate space 
+        printf("Table: %d\tIndex: %d\t Prediction: %d\t Taken: %d\t",
+            y->table, y->index, prediction, taken);
+        list<unsigned char>::iterator it = hist.begin();
+        int ct = 32;
+        while (ct > 0) {
+          printf("%d", *it);
+          ct--;
+          it++;
+        }
+        printf("\n");
 				srand(1);
 				int rNum = rand()%2;
 				unsigned int t_index = y->table;
