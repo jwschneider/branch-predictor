@@ -20,6 +20,7 @@ public:
 
 class my_predictor : public branch_predictor {
 public:
+const unsigned int LIMIT_FACTOR = 15000; // when to wipe table
 const unsigned int TABLE_BITS	= 12;   // start with 2^10 rows
 const unsigned int HISTORY_LEN = 31;    // start with 4 bit history length, as in the
                                         // book example  
@@ -28,6 +29,7 @@ const unsigned int TAG_LEN = 5;         // so that the prediction ang tag can fi
 const unsigned int TABLE_CT = 5;
 
 	my_update u;
+	unsigned int num_inst_seen = 0;
 	branch_info bi;
 	unsigned int hist;
 
@@ -36,13 +38,13 @@ const unsigned int TABLE_CT = 5;
 	my_predictor (void) : hist(0) { 
 		/* iterate through all history and set to 0 for all entries */
 		for (unsigned int i = 0; i < TABLE_CT; i++) {
-		unsigned int* tbl = (unsigned int*) malloc((1 << TABLE_BITS) * sizeof(unsigned int));
-    // what to initialize predictions to
-    for (int i = 0; i < (1<<TABLE_BITS); i++) {
-      *(tbl + i) = 1 << (TAG_LEN + 1);
-    }
-		pred.push_back(tbl);
-    } 
+			unsigned int* tbl = (unsigned int*) malloc((1 << TABLE_BITS) * sizeof(unsigned int));
+		    // what to initialize predictions to
+		    for (int i = 0; i < (1<<TABLE_BITS); i++) {
+		      *(tbl + i) = 1 << (TAG_LEN + 1);
+		    }
+				pred.push_back(tbl);
+		    } 
 	}
 
   unsigned int address_hash(unsigned int address, unsigned int history) {
@@ -89,7 +91,8 @@ const unsigned int TABLE_CT = 5;
 	}
 
 	void update (branch_update *u, bool taken, unsigned int target) {
-		if (bi.br_flags & BR_CONDITIONAL) {               
+		if (bi.br_flags & BR_CONDITIONAL) {        
+			num_inst_seen++;       
 			my_update* y = (my_update*) u;
 			unsigned int* tbl = pred[y->table];
 			unsigned int prediction = *(tbl + y->index) >> (TAG_LEN);
@@ -152,6 +155,16 @@ const unsigned int TABLE_CT = 5;
 			}
 		  hist = ((hist << 1) | taken) & ((1<< HISTORY_LEN) - 1); 
       
+		}
+		if (num_inst_seen > LIMIT_FACTOR) {
+			/* iterate through all history and set to 0 for all entries */
+			for (unsigned int j = 0; j < TABLE_CT; j++) {
+			    // what to initialize predictions to
+			    for (int i = 0; i < (1<<TABLE_BITS); i++) {
+			      *(pred[j] + i) = 1 << (TAG_LEN + 1);
+			    }
+		    } 
+		    num_inst_seen = 0;
 		}
 	}
 };
