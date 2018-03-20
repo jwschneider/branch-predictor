@@ -24,6 +24,7 @@ class my_predictor : public branch_predictor {
 public:
 const unsigned int TABLE_BITS	= 12;   // start with 2^10 rows
 const unsigned int HISTORY_LEN = 32;    // start with 4 bit history length, as in the
+
                                         // book example  
 const unsigned int TAG_LEN = 6;         // so that the prediction ang tag can fit into an
                                         // unsigned int, we use 30 bit tags
