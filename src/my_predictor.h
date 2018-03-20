@@ -11,6 +11,7 @@
 using std::list;
 using std::vector;
 using std::cout;
+using std::next;
 using std::endl;
 
 class my_update : public branch_update {
@@ -30,22 +31,22 @@ const unsigned int TABLE_CT = 5;
 
 	my_update u;
 	branch_info bi;
-  list<unsigned char> hist;
+  	list<unsigned char> hist;
 
 	vector<unsigned int *> pred; 
 
-	my_predictor (void) : { 
+	my_predictor (void) { 
 		/* iterate through all history and set to 0 for all entries */
 		for (unsigned int i = 0; i < TABLE_CT; i++) {
 		unsigned int* tbl = (unsigned int*) malloc((1 << TABLE_BITS) * sizeof(unsigned int));
-    // what to initialize predictions to
-    for (int i = 0; i < (1<<TABLE_BITS); i++) {
-      *(tbl + i) = 1 << (TAG_LEN + 1);
-    }
-		pred.push_back(tbl);
-    } 
-    for (int i = 0; i < 1<<(TABLE_CT - 1); i++) {
-      hist.push_back(0);
+	    // what to initialize predictions to
+	    for (int i = 0; i < (1<<TABLE_BITS); i++) {
+	      *(tbl + i) = 1 << (TAG_LEN + 1);
+	    }
+			pred.push_back(tbl);
+	    } 
+	    for (int i = 0; i < 1<<(TABLE_CT - 1); i++) {
+	      hist.push_back(0);
     }
 	}
 
@@ -53,7 +54,8 @@ const unsigned int TABLE_CT = 5;
     unsigned int ret = address;
     unsigned int buffer;
     unsigned int buffer_ct = 0;
-    for (list<unsigned char>::iterator it = max(hist.begin(), hist.end() - len); it != hist.end(); it++) {
+    unsigned int item_ct = 0;
+    for (list<unsigned char>::iterator it = hist.end(); (it != hist.begin()) && (item_ct < len); it--) {
       if (buffer_ct < sizeof(buffer)) {
         buffer = (buffer << 1) | *it;
         buffer_ct++;
@@ -62,6 +64,7 @@ const unsigned int TABLE_CT = 5;
         buffer_ct = 0;
         buffer = 0;
       }
+      item_ct++;
     }
     return ret ^ buffer;
   }
@@ -69,10 +72,12 @@ const unsigned int TABLE_CT = 5;
   // returns the i'th element of the geometric progression,
   // or 0 if i is 0.
   unsigned int gp(int base, int i) {
+  	unsigned int ret = 0;
     if (i == 0)
       return 0;
     else
-      return pow(base, i);
+      ret = pow(base, i);
+  	  return ret;
   }
 
   void advance_history(bool taken) {
@@ -110,10 +115,7 @@ const unsigned int TABLE_CT = 5;
 			my_update* y = (my_update*) u;
 			unsigned int* tbl = pred[y->table];
 			unsigned int prediction = *(tbl + y->index) >> (TAG_LEN);
-      //if (y->index == 963) 
-      //  printf("Address: %d\tIndex: %d\tTable: %d\tPrediction: %d\t Taken: %d\n",
-      //     bi.address, y->index, y->table, prediction, taken);
-			//printf ("%d\t%d\t%d\t%d\n", y->table, y->index, prediction, taken);
+
 			if (taken == (prediction >> 1)) {
 			// if prediction was correct
 				if (taken) {
@@ -136,7 +138,6 @@ const unsigned int TABLE_CT = 5;
           		}
 			} else {
 			// if prediction was incorrect, allocate space 
-      //  printf ("Mispredict!\t Table:%d\t Index:%d\t Prediction:%d\t Taken:%d\t History:%d\n", y->table, y->index, prediction, taken, hist);
 				srand(1);
 				int rNum = rand()%2;
 				unsigned int t_index = y->table;
@@ -164,7 +165,7 @@ const unsigned int TABLE_CT = 5;
 						t_index = TABLE_CT - 1;
 					}
 				}
-				*(pred[t_index] + (address_hash(bi.address, gp(2, t_index)) & ((1<<TABLE_BITS) - 1))) =
+				*(pred[t_index] + y->index) =
 					 ((((unsigned int) taken << 1) | (1 - taken)) << TAG_LEN) | ((bi.address) & ((1<<TAG_LEN) - 1));
 			}
 		  advance_history(taken);
