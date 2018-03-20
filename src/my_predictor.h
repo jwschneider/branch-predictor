@@ -7,10 +7,26 @@
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
-using std::list;
 using std::vector;
 using std::cout;
 using std::endl;
+
+void printBits(size_t const size, void const * const ptr)
+{
+  unsigned char *b = (unsigned char*) ptr;
+  unsigned char byte;
+  int i, j;
+
+  for (i=size-1;i>=0;i--)
+  {
+    for (j=7;j>=0;j--)
+    {
+      byte = (b[i] >> j) & 1;
+      printf("%u", byte);
+    }
+  }
+}
+
 
 class my_update : public branch_update {
 public:
@@ -20,14 +36,16 @@ public:
 
 class my_predictor : public branch_predictor {
 public:
+const unsigned int LIMIT_FACTOR = 15000; // when to wipe table
 const unsigned int TABLE_BITS	= 12;   // start with 2^10 rows
 const unsigned int HISTORY_LEN = 31;    // start with 4 bit history length, as in the
                                         // book example  
 const unsigned int TAG_LEN = 5;         // so that the prediction ang tag can fit into an
                                         // unsigned int, we use 30 bit tags
-const unsigned int TABLE_CT = 5;
+const unsigned int TABLE_CT = 6;
 
 	my_update u;
+	unsigned int num_inst_seen = 0;
 	branch_info bi;
 	unsigned int hist;
 
@@ -36,17 +54,17 @@ const unsigned int TABLE_CT = 5;
 	my_predictor (void) : hist(0) { 
 		/* iterate through all history and set to 0 for all entries */
 		for (unsigned int i = 0; i < TABLE_CT; i++) {
-		unsigned int* tbl = (unsigned int*) malloc((1 << TABLE_BITS) * sizeof(unsigned int));
-    // what to initialize predictions to
-    for (int i = 0; i < (1<<TABLE_BITS); i++) {
-      *(tbl + i) = 1 << (TAG_LEN + 1);
-    }
-		pred.push_back(tbl);
-    } 
+			unsigned int* tbl = (unsigned int*) malloc((1 << TABLE_BITS) * sizeof(unsigned int));
+		    // what to initialize predictions to
+		    for (int i = 0; i < (1<<TABLE_BITS); i++) {
+		      *(tbl + i) = 1 << (TAG_LEN + 1);
+		    }
+				pred.push_back(tbl);
+		    } 
 	}
 
   unsigned int address_hash(unsigned int address, unsigned int history) {
-    return address ^ history;
+    return ((address + history) * (address + history + 1))/2 + (history >> 16);
   }
 
   // returns the i'th element of the geometric progression,
@@ -59,8 +77,11 @@ const unsigned int TABLE_CT = 5;
   }
 
   // returns the bottom i bits of hist
-  unsigned int hist_mask(int i) {
-    return hist & ((1<<i)-1);
+  unsigned int hist_mask(unsigned int i) {
+    if (i < sizeof(unsigned int)*8)
+        return hist & ((1<<i)-1);
+    else
+        return hist;
   }
 
 	branch_update *predict (branch_info &b) {
@@ -88,13 +109,26 @@ const unsigned int TABLE_CT = 5;
 		return &u;
 	}
 
-	void update (branch_update *u, bool taken, unsigned int target) { if (bi.br_flags & BR_CONDITIONAL) {               
+	void update (branch_update *u, bool taken, unsigned int target) {
+		if (bi.br_flags & BR_CONDITIONAL) {        
+			num_inst_seen++;       
 			my_update* y = (my_update*) u;
 			unsigned int* tbl = pred[y->table];
 			unsigned int prediction = *(tbl + y->index) >> (TAG_LEN);
-      //if (y->index == 963) 
-      //  printf("Address: %d\tIndex: %d\tTable: %d\tPrediction: %d\t Taken: %d\n",
-      //     bi.address, y->index, y->table, prediction, taken);
+      if (bi.address == 134515682) {
+        unsigned int geop = gp(2, y->table);
+        unsigned int hm = hist_mask(geop);
+        unsigned int ah = address_hash(bi.address, hm);
+        unsigned int mod = ah & ((1<<TABLE_BITS) - 1);
+        printf("addr->%d\ti->%d\ttbl->%d\tp->%d\tt->%d\t gp->%d\thist_mask->",
+           bi.address, y->index, y->table, prediction, taken, geop);
+        printBits(sizeof(hm), &hm);
+        printf("\taddr_hash->");
+        printBits(sizeof(ah), &ah);
+        printf("\tmod->");
+        printBits(sizeof(mod), &mod);
+        printf("\n");
+      }
 			//printf ("%d\t%d\t%d\t%d\n", y->table, y->index, prediction, taken);
 			if (taken == (prediction >> 1)) {
 			// if prediction was correct
@@ -118,6 +152,10 @@ const unsigned int TABLE_CT = 5;
           		}
 			} else {
 			// if prediction was incorrect, allocate space 
+        if (bi.address == 134515682)
+          printf("Mispredict!\n");
+        //printf("Mispredict! Table:%d\tIndex:%d\tInstr Count:%d\n", 
+        //  y->table, y->index, num_inst_seen);
 				srand(1);
 				int rNum = rand()%2; unsigned int t_index = y->table; if (rNum) {
 					// rNum is odd, update table i + 1
@@ -149,5 +187,15 @@ const unsigned int TABLE_CT = 5;
 		  hist = ((hist << 1) | taken) & ((1<< HISTORY_LEN) - 1); 
       
 		}
+		// if (num_inst_seen > LIMIT_FACTOR) {
+			// /* iterate through all history and set to 0 for all entries */
+			// for (unsigned int j = 0; j < TABLE_CT; j++) {
+			    // // what to initialize predictions to
+			    // for (int i = 0; i < (1<<TABLE_BITS); i++) {
+			      // *(pred[j] + i) = 1 << (TAG_LEN + 1);
+			    // }
+		    // } 
+		    // num_inst_seen = 0;
+		//}
 	}
 };
