@@ -38,11 +38,11 @@ const unsigned int TABLE_CT = 5;
 	my_predictor (void) { 
 		/* iterate through all history and set to 0 for all entries */
 		for (unsigned int i = 0; i < TABLE_CT; i++) {
-		unsigned int* tbl = (unsigned int*) malloc((1 << TABLE_BITS) * sizeof(unsigned int));
-	    // what to initialize predictions to
-	    for (int i = 0; i < (1<<TABLE_BITS); i++) {
-	      *(tbl + i) = 1 << (TAG_LEN + 1);
-	    }
+			unsigned int* tbl = (unsigned int*) malloc((1 << TABLE_BITS) * sizeof(unsigned int));
+		    // what to initialize predictions to
+		    for (int i = 0; i < (1<<TABLE_BITS); i++) {
+		      *(tbl + i) = 1 << (TAG_LEN + 1);
+		    }
 			pred.push_back(tbl);
 	    } 
 	    for (int i = 0; i < 1<<(TABLE_CT - 1); i++) {
@@ -55,14 +55,14 @@ const unsigned int TABLE_CT = 5;
     unsigned int buffer;
     unsigned int buffer_ct = 0;
     unsigned int item_ct = 0;
-    for (list<unsigned char>::iterator it = hist.end(); (it != hist.begin()) && (item_ct < len); it--) {
+    for (list<unsigned char>::iterator it = hist.begin(); (it != hist.end()) && (item_ct < len); it++) {
       if (buffer_ct < sizeof(buffer)) {
         buffer = (buffer << 1) | *it;
         buffer_ct++;
       } else {
         ret ^= buffer;
         buffer_ct = 0;
-        buffer = 0;
+        buffer = *it;
       }
       item_ct++;
     }
@@ -72,17 +72,15 @@ const unsigned int TABLE_CT = 5;
   // returns the i'th element of the geometric progression,
   // or 0 if i is 0.
   unsigned int gp(int base, int i) {
-  	unsigned int ret = 0;
     if (i == 0)
       return 0;
     else
-      ret = pow(base, i);
-  	  return ret;
+      return pow(base, i);
   }
 
   void advance_history(bool taken) {
-    hist.push_back((unsigned char) taken);
-    hist.pop_front();
+    hist.push_front((unsigned char) taken);
+    hist.pop_back();
   }
 
 	branch_update *predict (branch_info &b) {
@@ -106,7 +104,7 @@ const unsigned int TABLE_CT = 5;
 			u.direction_prediction (true);                  
 		}
 		u.target_prediction (0);                          
-		//cout << u.table << endl << u.index << endl;
+		cout << u.table << endl << u.index << endl;
 		return &u;
 	}
 
