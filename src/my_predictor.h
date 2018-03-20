@@ -24,15 +24,16 @@ public:
 class my_predictor : public branch_predictor {
 public:
 const unsigned int TABLE_BITS	= 12;   // start with 2^10 rows
-//const unsigned int HISTORY_LEN = 1024;    // start with 4 bit history length, as in the
+const unsigned int HISTORY_LEN = 32;    // start with 4 bit history length, as in the
+
                                         // book example  
-const unsigned int TAG_LEN = 5;         // so that the prediction ang tag can fit into an
+const unsigned int TAG_LEN = 6;         // so that the prediction ang tag can fit into an
                                         // unsigned int, we use 30 bit tags
-const unsigned int TABLE_CT = 5;
+const unsigned int TABLE_CT = 6;
 
 	my_update u;
 	branch_info bi;
-  	list<unsigned char> hist;
+  unsigned char hist;
 
 	vector<unsigned int *> pred; 
 
@@ -109,8 +110,7 @@ const unsigned int TABLE_CT = 5;
 		return &u;
 	}
 
-	void update (branch_update *u, bool taken, unsigned int target) {
-		if (bi.br_flags & BR_CONDITIONAL) {               
+	void update (branch_update *u, bool taken, unsigned int target) { if (bi.br_flags & BR_CONDITIONAL) {               
 			my_update* y = (my_update*) u;
 			unsigned int* tbl = pred[y->table];
 			unsigned int prediction = *(tbl + y->index) >> (TAG_LEN);
@@ -137,16 +137,6 @@ const unsigned int TABLE_CT = 5;
           		}
 			} else {
 			// if prediction was incorrect, allocate space 
-        printf("Table: %d\tIndex: %d\t Prediction: %d\t Taken: %d\t",
-            y->table, y->index, prediction, taken);
-        list<unsigned char>::iterator it = hist.begin();
-        int ct = 32;
-        while (ct > 0) {
-          printf("%d", *it);
-          ct--;
-          it++;
-        }
-        printf("\n");
 				srand(1);
 				int rNum = rand()%2;
 				unsigned int t_index = y->table;
@@ -176,8 +166,11 @@ const unsigned int TABLE_CT = 5;
 				}
 				*(pred[t_index] + y->index) =
 					 ((((unsigned int) taken << 1) | (1 - taken)) << TAG_LEN) | ((bi.address) & ((1<<TAG_LEN) - 1));
+				// store the updated prediction in table
 			}
-		  advance_history(taken);
+		  	hist = ((hist << 1) | taken) & ((1<< HISTORY_LEN) - 1); 
+      
+
 		}
 	}
 };
