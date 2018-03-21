@@ -45,7 +45,6 @@ const unsigned int TAG_LEN = 6;
 const unsigned int TABLE_CT = 8;
 const bool UPDATE_ALT_ON_HIT = true;    // I tested this once and it seems to work better 
                                         // with this on
-
 	my_update u;
 	branch_info bi;
 	unsigned long long hist;    // I made history a long long (64 bits on most machines) 
